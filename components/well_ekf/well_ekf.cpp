@@ -6,7 +6,6 @@ namespace well_ekf {
 void WellEKF::setup() {
     boot_time = millis();
     
-    // Nediagonální matice Q není potřeba pro studnu, ale pro kinematiku by byla
     Q << 1e-6f, 0.0f, 0.0f,
          0.0f, 1e-9f, 0.0f,
          0.0f, 0.0f, 1e-12f;
@@ -25,12 +24,15 @@ void WellEKF::setup() {
 }
 
 void WellEKF::update() {
-    if (!level_sensor_->has_state()) return;
+    // Vykonavani pozastaveno, pokud chybi platna data vstupu
+    if (!level_sensor_->has_state() || !pump_flow_sensor_->has_state()) return;
 
     float measured_h1 = level_sensor_->state;
+    float current_pump_flow = pump_flow_sensor_->state; 
     
     if (!ekf_initialized) {
         if (std::isnan(init_h2) || std::isnan(init_k)) {
+            // Cekani az 15 vterin na data z HA
             if (millis() - boot_time < 15000) return;
             if (std::isnan(init_h2)) init_h2 = measured_h1;
             if (std::isnan(init_k)) init_k = 0.0001f;
@@ -45,10 +47,7 @@ void WellEKF::update() {
 
     float dt_sec = this->get_update_interval() / 1000.0f;
     
-    // Zjednodušený průtok
-    float current_pump_flow = 0.0f; 
-
-    // Predikce EKF (pro studnu)
+    // Predikce modelu
     Vector3f x_pred;
     x_pred(0) = x(0) + dt_sec * (x(2) * (x(1) - x(0)) - (current_pump_flow / A_well));
     x_pred(1) = x(1);
@@ -56,7 +55,7 @@ void WellEKF::update() {
 
     if (x_pred(0) < 0.0f) x_pred(0) = 0.0f;
 
-    // Jacobiho matice pro studnu
+    // Fyzikalni Jacobiho matice pro aquifer
     Matrix3f F;
     F << 1.0f - (dt_sec * x(2)),  dt_sec * x(2),  dt_sec * (x(1) - x(0)),
          0.0f,                    1.0f,           0.0f,

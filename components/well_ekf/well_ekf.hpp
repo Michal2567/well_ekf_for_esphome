@@ -17,11 +17,11 @@ private:
     Matrix3f Q;
     float R;
     float A_well;
-    float pump_flow;
     bool ekf_initialized = false;
     uint32_t boot_time = 0;
 
     sensor::Sensor *level_sensor_{nullptr};
+    sensor::Sensor *pump_flow_sensor_{nullptr};
     sensor::Sensor *permeability_sensor_{nullptr};
     
     std::string ha_h2_entity_;
@@ -31,8 +31,8 @@ private:
 
 public:
     void set_area(float area) { A_well = area; }
-    void set_pump_flow(float flow) { pump_flow = flow; }
     void set_level_sensor(sensor::Sensor *sensor) { level_sensor_ = sensor; }
+    void set_pump_flow_sensor(sensor::Sensor *sensor) { pump_flow_sensor_ = sensor; }
     void set_permeability_sensor(sensor::Sensor *sensor) { permeability_sensor_ = sensor; }
     void set_ha_h2_entity(const std::string &entity) { ha_h2_entity_ = entity; }
     void set_ha_k_entity(const std::string &entity) { ha_k_entity_ = entity; }
