@@ -1,6 +1,7 @@
 #include "well_ekf.hpp"
 #include "esphome/components/api/api_server.h"
 #include <cstring>
+#include <optional>
 
 namespace well_ekf {
 
@@ -16,11 +17,11 @@ void WellEKF::setup() {
     R = 0.0001f;
     
     if (esphome::api::global_api_server != nullptr) {
-        esphome::api::global_api_server->subscribe_home_assistant_state(ha_h2_entity_, [this](std::string state) {
+        esphome::api::global_api_server->subscribe_homeassistant_state(ha_h2_entity_, std::nullopt, [this](std::string state) {
             auto val = esphome::parse_number<float>(state);
             if (val.has_value()) this->init_h2 = val.value();
         });
-        esphome::api::global_api_server->subscribe_home_assistant_state(ha_k_entity_, [this](std::string state) {
+        esphome::api::global_api_server->subscribe_homeassistant_state(ha_k_entity_, std::nullopt, [this](std::string state) {
             auto val = esphome::parse_number<float>(state);
             if (val.has_value()) this->init_k = val.value();
         });
