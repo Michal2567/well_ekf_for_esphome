@@ -51,4 +51,3 @@ async def to_code(config):
 
     cg.add_build_flag("-I components/well_ekf")
     cg.add_build_flag("-Isrc/esphome/components/well_ekf/eigen")
-    cg.add_library("Eigen", "3.4.0")
