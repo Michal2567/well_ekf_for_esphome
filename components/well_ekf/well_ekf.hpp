@@ -2,7 +2,7 @@
 #include "esphome.h"
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
-#include <Eigen/Dense>
+#include <eigen/Dense>
 #include <string>
 #include <cmath>
 
