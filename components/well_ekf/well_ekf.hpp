@@ -2,21 +2,18 @@
 #include "esphome.h"
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
-#include "Eigen/Dense"
 #include <string>
 #include <cmath>
 
 namespace well_ekf {
 
-using namespace Eigen;
-
 class WellEKF : public PollingComponent, public sensor::Sensor {
 private:
-    Vector3f x;
-    Matrix3f P;
-    Matrix3f Q;
-    float R;
-    float A_well;
+    float x[3];          // Stavový vektor: [h1, h2, k]
+    float P[3][3];       // Kovarianční matice
+    float Q[3][3];       // Šum procesu
+    float R;             // Šum měření
+    float A_well;        // Plocha studny
     bool ekf_initialized = false;
     uint32_t boot_time = 0;
 

@@ -1,10 +1,7 @@
-import os
-import shutil
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import sensor
 from esphome.const import CONF_ID
-from esphome.core import CORE # Import pro přístup k cestám buildu
 
 well_ekf_ns = cg.esphome_ns.namespace("well_ekf")
 WellEKF = well_ekf_ns.class_("WellEKF", cg.PollingComponent, sensor.Sensor)
@@ -51,16 +48,3 @@ async def to_code(config):
     if CONF_PERMEABILITY_SENSOR in config:
         perm_sens = await sensor.new_sensor(config[CONF_PERMEABILITY_SENSOR])
         cg.add(var.set_permeability_sensor(perm_sens))
-
-# 1. Zdrojová cesta k fyzickým souborům Eigen z tvého Gitu
-component_dir = os.path.dirname(__file__)
-source_eigen = os.path.join(component_dir, "Eigen")
-
-# 2. Cílová cesta v kořeni buildu (src/Eigen), na kterou vidí celý ESP-IDF
-dest_eigen = CORE.relative_build_path("src", "Eigen")
-
-# 3. Hrubé zkopírování celé složky včetně souborů bez přípon
-if os.path.exists(source_eigen):
-    if os.path.exists(dest_eigen):
-        shutil.rmtree(dest_eigen)
-    shutil.copytree(source_eigen, dest_eigen)
