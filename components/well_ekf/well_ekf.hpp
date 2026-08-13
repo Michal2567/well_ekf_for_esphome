@@ -7,7 +7,7 @@
 
 namespace well_ekf {
 
-class WellEKF : public PollingComponent, public sensor::Sensor {
+class WellEKF : public esphome::PollingComponent, public esphome::sensor::Sensor {
 private:
     float x[3];          // Stavový vektor: [h1, h2, k]
     float P[3][3];       // Kovarianční matice
@@ -17,9 +17,9 @@ private:
     bool ekf_initialized = false;
     uint32_t boot_time = 0;
 
-    sensor::Sensor *level_sensor_{nullptr};
-    sensor::Sensor *pump_flow_sensor_{nullptr};
-    sensor::Sensor *permeability_sensor_{nullptr};
+    esphome::sensor::Sensor *level_sensor_{nullptr};
+    esphome::sensor::Sensor *pump_flow_sensor_{nullptr};
+    esphome::sensor::Sensor *permeability_sensor_{nullptr};
     
     std::string ha_h2_entity_;
     std::string ha_k_entity_;
@@ -28,9 +28,9 @@ private:
 
 public:
     void set_area(float area) { A_well = area; }
-    void set_level_sensor(sensor::Sensor *sensor) { level_sensor_ = sensor; }
-    void set_pump_flow_sensor(sensor::Sensor *sensor) { pump_flow_sensor_ = sensor; }
-    void set_permeability_sensor(sensor::Sensor *sensor) { permeability_sensor_ = sensor; }
+    void set_level_sensor(esphome::sensor::Sensor *sensor) { level_sensor_ = sensor; }
+    void set_pump_flow_sensor(esphome::sensor::Sensor *sensor) { pump_flow_sensor_ = sensor; }
+    void set_permeability_sensor(esphome::sensor::Sensor *sensor) { permeability_sensor_ = sensor; }
     void set_ha_h2_entity(const std::string &entity) { ha_h2_entity_ = entity; }
     void set_ha_k_entity(const std::string &entity) { ha_k_entity_ = entity; }
 

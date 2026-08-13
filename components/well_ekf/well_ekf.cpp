@@ -5,7 +5,7 @@
 namespace well_ekf {
 
 void WellEKF::setup() {
-    boot_time = millis();
+    boot_time = esphome::millis();
     
     // Inicializace Q matice nulami a nastavení diagonály
     memset(Q, 0, sizeof(Q));
@@ -17,11 +17,11 @@ void WellEKF::setup() {
     
     if (esphome::api::global_api_server != nullptr) {
         esphome::api::global_api_server->subscribe_home_assistant_state(ha_h2_entity_, [this](std::string state) {
-            auto val = parse_number<float>(state);
+            auto val = esphome::parse_number<float>(state);
             if (val.has_value()) this->init_h2 = val.value();
         });
         esphome::api::global_api_server->subscribe_home_assistant_state(ha_k_entity_, [this](std::string state) {
-            auto val = parse_number<float>(state);
+            auto val = esphome::parse_number<float>(state);
             if (val.has_value()) this->init_k = val.value();
         });
     }
@@ -36,7 +36,7 @@ void WellEKF::update() {
     if (!ekf_initialized) {
         if (std::isnan(init_h2) || std::isnan(init_k)) {
             // Cekani az 15 vterin na data z HA
-            if (millis() - boot_time < 15000) return;
+            if (esphome::millis() - boot_time < 15000) return;
             if (std::isnan(init_h2)) init_h2 = measured_h1;
             if (std::isnan(init_k)) init_k = 0.0001f;
         }
@@ -85,18 +85,14 @@ void WellEKF::update() {
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             P_pred[i][j] = Q[i][j];
-            for (int k = 0; k < 3; k++) P_pred[i][j] += FP[i][k] * F[j][k]; // F[j][k] odpovida transpozici F^T
+            for (int k = 0; k < 3; k++) P_pred[i][j] += FP[i][k] * F[j][k];
         }
     }
 
     // 4. Inovace a Kalmanův zisk
-    // Matice H = [1, 0, 0], coz znamena ze merime pouze h1 (x_pred[0])
     float y = measured_h1 - x_pred[0];
-    
-    // Inovacni kovariance S = H * P_pred * H^T + R -> odpovida prvnimu prvku matice
     float S = P_pred[0][0] + R;
     
-    // Kalmanuv zisk K = P_pred * H^T / S -> odpovida prvnimu sloupci matice P_pred vydelenemu S
     float K[3];
     K[0] = P_pred[0][0] / S;
     K[1] = P_pred[1][0] / S;
@@ -106,17 +102,15 @@ void WellEKF::update() {
     for (int i = 0; i < 3; i++) {
         x[i] = x_pred[i] + K[i] * y;
     }
-    if (x[2] < 1e-6f) x[2] = 1e-6f; // Ochrana proti zaporne propustnosti
+    if (x[2] < 1e-6f) x[2] = 1e-6f;
 
     // 6. Aktualizace kovariance: P = (I - K * H) * P_pred
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            // K * H vytvori matici, kde nenulovy je pouze prvni sloupec, coz rovnici vyrazne zjednodusi
             P[i][j] = P_pred[i][j] - K[i] * P_pred[0][j];
         }
     }
 
-    // Symetrizace matice P k zamezeni akumulace chyb v plovouci radove carce
     for (int i = 0; i < 3; i++) {
         for (int j = i + 1; j < 3; j++) {
             float avg = (P[i][j] + P[j][i]) * 0.5f;
@@ -124,7 +118,6 @@ void WellEKF::update() {
         }
     }
 
-    // Odeslani vysledku
     this->publish_state(x[1]);
     if (permeability_sensor_ != nullptr) permeability_sensor_->publish_state(x[2]);
 }
