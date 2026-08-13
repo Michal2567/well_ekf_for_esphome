@@ -1,31 +1,17 @@
 #include "well_ekf.hpp"
-#include "esphome/components/api/api_server.h"
 #include <cstring>
-#include <optional>
 
 namespace well_ekf {
 
 void WellEKF::setup() {
     boot_time = esphome::millis();
     
-    // Inicializace Q matice nulami a nastavení diagonály
     memset(Q, 0, sizeof(Q));
     Q[0][0] = 1e-6f;
     Q[1][1] = 1e-9f;
     Q[2][2] = 1e-12f;
     
     R = 0.0001f;
-    
-    if (esphome::api::global_api_server != nullptr) {
-        esphome::api::global_api_server->subscribe_homeassistant_state(ha_h2_entity_, std::nullopt, [this](std::string state) {
-            auto val = esphome::parse_number<float>(state);
-            if (val.has_value()) this->init_h2 = val.value();
-        });
-        esphome::api::global_api_server->subscribe_homeassistant_state(ha_k_entity_, std::nullopt, [this](std::string state) {
-            auto val = esphome::parse_number<float>(state);
-            if (val.has_value()) this->init_k = val.value();
-        });
-    }
 }
 
 void WellEKF::update() {
@@ -35,8 +21,15 @@ void WellEKF::update() {
     float current_pump_flow = pump_flow_sensor_->state; 
     
     if (!ekf_initialized) {
+        // Nacteni dat ze senzoru napojenych na Home Assistant
+        if (std::isnan(init_h2) && init_h2_sensor_->has_state()) {
+            init_h2 = init_h2_sensor_->state;
+        }
+        if (std::isnan(init_k) && init_k_sensor_->has_state()) {
+            init_k = init_k_sensor_->state;
+        }
+
         if (std::isnan(init_h2) || std::isnan(init_k)) {
-            // Cekani az 15 vterin na data z HA
             if (esphome::millis() - boot_time < 15000) return;
             if (std::isnan(init_h2)) init_h2 = measured_h1;
             if (std::isnan(init_k)) init_k = 0.0001f;
@@ -57,14 +50,12 @@ void WellEKF::update() {
 
     float dt_sec = this->get_update_interval() / 1000.0f;
     
-    // 1. Predikce stavu (x_pred)
     float x_pred[3];
     x_pred[0] = x[0] + dt_sec * (x[2] * (x[1] - x[0]) - (current_pump_flow / A_well));
     x_pred[1] = x[1];
     x_pred[2] = x[2];
     if (x_pred[0] < 0.0f) x_pred[0] = 0.0f;
 
-    // 2. Vytvoření Jacobiho matice (F)
     float F[3][3];
     memset(F, 0, sizeof(F));
     F[0][0] = 1.0f - (dt_sec * x[2]);
@@ -73,7 +64,6 @@ void WellEKF::update() {
     F[1][1] = 1.0f;
     F[2][2] = 1.0f;
 
-    // 3. Predikce kovariance: P_pred = F * P * F^T + Q
     float FP[3][3];
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -90,7 +80,6 @@ void WellEKF::update() {
         }
     }
 
-    // 4. Inovace a Kalmanův zisk
     float y = measured_h1 - x_pred[0];
     float S = P_pred[0][0] + R;
     
@@ -99,13 +88,11 @@ void WellEKF::update() {
     K[1] = P_pred[1][0] / S;
     K[2] = P_pred[2][0] / S;
 
-    // 5. Aktualizace stavu: x = x_pred + K * y
     for (int i = 0; i < 3; i++) {
         x[i] = x_pred[i] + K[i] * y;
     }
     if (x[2] < 1e-6f) x[2] = 1e-6f;
 
-    // 6. Aktualizace kovariance: P = (I - K * H) * P_pred
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             P[i][j] = P_pred[i][j] - K[i] * P_pred[0][j];
