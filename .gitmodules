@@ -1,0 +1,3 @@
+[submodule "components/well_ekf/eigen"]
+	path = components/well_ekf/eigen
+	url = https://github.com/PX4/eigen.git

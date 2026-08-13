@@ -50,4 +50,3 @@ async def to_code(config):
         cg.add(var.set_permeability_sensor(perm_sens))
 
     cg.add_build_flag("-I components/well_ekf")
-    cg.add_library("Eigen", None)
