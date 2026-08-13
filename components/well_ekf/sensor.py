@@ -1,7 +1,10 @@
+import os
+import shutil
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import sensor
 from esphome.const import CONF_ID
+from esphome.core import CORE # Import pro přístup k cestám buildu
 
 well_ekf_ns = cg.esphome_ns.namespace("well_ekf")
 WellEKF = well_ekf_ns.class_("WellEKF", cg.PollingComponent, sensor.Sensor)
@@ -49,5 +52,19 @@ async def to_code(config):
         perm_sens = await sensor.new_sensor(config[CONF_PERMEABILITY_SENSOR])
         cg.add(var.set_permeability_sensor(perm_sens))
 
-    cg.add_build_flag("-I components/well_ekf")
-    cg.add_library("hideakitai/Eigen", None)
+    # --- MANUÁLNÍ KOPÍROVÁNÍ KNIHOVNY EIGEN ---
+    # 1. Zjistíme zdrojovou cestu, kam ESPHome stáhl komponentu z Gitu
+    component_dir = os.path.dirname(__file__)
+    source_eigen = os.path.join(component_dir, "Eigen")
+    
+    # 2. Cílová cesta přímo v pracovním adresáři kompilátoru
+    dest_eigen = CORE.relative_build_path("src", "Eigen")
+    
+    # 3. Zkopírujeme adresář včetně všech souborů bez přípon
+    if os.path.exists(source_eigen):
+        if os.path.exists(dest_eigen):
+            shutil.rmtree(dest_eigen)
+        shutil.copytree(source_eigen, dest_eigen)
+        
+    # 4. Řekneme kompilátoru, ať hledá hlavičkové soubory ve složce src
+    cg.add_build_flag("-Isrc")
