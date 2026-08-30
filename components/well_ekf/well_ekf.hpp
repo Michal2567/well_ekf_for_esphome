@@ -22,6 +22,8 @@ class WellEKF : public esphome::PollingComponent, public esphome::sensor::Sensor
   void set_p_h2_sensor(esphome::sensor::Sensor *sensor) { p_h2_sensor_ = sensor; }
   void set_p_k_sensor(esphome::sensor::Sensor *sensor) { p_k_sensor_ = sensor; }
 
+  void set_area(float area) { A_well = area; }
+
   float A_well{1.13f};
 
  protected:
