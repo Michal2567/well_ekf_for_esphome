@@ -12,6 +12,11 @@ CONF_PUMP_FLOW_SENSOR = "pump_flow_sensor_id"
 CONF_INIT_H2_SENSOR = "init_h2_sensor_id"
 CONF_INIT_K_SENSOR = "init_k_sensor_id"
 CONF_PERMEABILITY_SENSOR = "permeability_sensor"
+CONF_FILTERED_H1_SENSOR = "filtered_h1_sensor"
+CONF_INNOVATION_SENSOR = "innovation_sensor"
+CONF_P_H1_SENSOR = "p_h1_sensor"
+CONF_P_H2_SENSOR = "p_h2_sensor"
+CONF_P_K_SENSOR = "p_k_sensor"
 
 CONFIG_SCHEMA = sensor.sensor_schema(
     unit_of_measurement="m",
@@ -26,6 +31,21 @@ CONFIG_SCHEMA = sensor.sensor_schema(
     cv.Optional(CONF_PERMEABILITY_SENSOR): sensor.sensor_schema(
         unit_of_measurement="1/s",
         accuracy_decimals=6,
+    ),
+    cv.Optional(CONF_FILTERED_H1_SENSOR): sensor.sensor_schema(
+        accuracy_decimals=3,
+    ),
+    cv.Optional(CONF_INNOVATION_SENSOR): sensor.sensor_schema(
+        accuracy_decimals=4,
+    ),
+    cv.Optional(CONF_P_H1_SENSOR): sensor.sensor_schema(
+        accuracy_decimals=6,
+    ),
+    cv.Optional(CONF_P_H2_SENSOR): sensor.sensor_schema(
+        accuracy_decimals=6,
+    ),
+    cv.Optional(CONF_P_K_SENSOR): sensor.sensor_schema(
+        accuracy_decimals=8,
     ),
 }).extend(cv.polling_component_schema("30s"))
 
@@ -51,3 +71,18 @@ async def to_code(config):
     if CONF_PERMEABILITY_SENSOR in config:
         perm_sens = await sensor.new_sensor(config[CONF_PERMEABILITY_SENSOR])
         cg.add(var.set_permeability_sensor(perm_sens))
+    if CONF_FILTERED_H1_SENSOR in config:
+        sens = await sensor.new_sensor(config[CONF_FILTERED_H1_SENSOR])
+        cg.add(var.set_filtered_h1_sensor(sens))
+    if CONF_INNOVATION_SENSOR in config:
+        sens = await sensor.new_sensor(config[CONF_INNOVATION_SENSOR])
+        cg.add(var.set_innovation_sensor(sens))
+    if CONF_P_H1_SENSOR in config:
+        sens = await sensor.new_sensor(config[CONF_P_H1_SENSOR])
+        cg.add(var.set_p_h1_sensor(sens))
+    if CONF_P_H2_SENSOR in config:
+        sens = await sensor.new_sensor(config[CONF_P_H2_SENSOR])
+        cg.add(var.set_p_h2_sensor(sens))
+    if CONF_P_K_SENSOR in config:
+        sens = await sensor.new_sensor(config[CONF_P_K_SENSOR])
+        cg.add(var.set_p_k_sensor(sens))
