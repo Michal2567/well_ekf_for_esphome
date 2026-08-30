@@ -9,8 +9,8 @@ void WellEKF::setup() {
     
     memset(Q, 0, sizeof(Q));
     Q[0][0] = 1e-6f;
-    Q[1][1] = 1e-9f;
-    Q[2][2] = 1e-12f;
+    Q[1][1] = 1e-15f;
+    Q[2][2] = 1e-15f;
     
     R = 0.0001f;
 }
@@ -40,9 +40,9 @@ void WellEKF::update() {
         x[2] = init_k;
         
         memset(P, 0, sizeof(P));
-        P[0][0] = 0.01f;
-        P[1][1] = 0.1f;
-        P[2][2] = 0.001f;
+        P[0][0] = 1e-6f;
+        P[1][1] = 1e-6f;
+        P[2][2] = 1e-6f;
         
         ekf_initialized = true;
         return;
