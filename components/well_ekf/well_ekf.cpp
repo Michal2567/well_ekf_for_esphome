@@ -1,5 +1,6 @@
 #include "well_ekf.hpp"
 #include <cstring>
+#include <cmath>
 
 namespace well_ekf {
 
@@ -21,7 +22,6 @@ void WellEKF::update() {
     float current_pump_flow = pump_flow_sensor_->state; 
     
     if (!ekf_initialized) {
-        // Nacteni dat ze senzoru napojenych na Home Assistant
         if (std::isnan(init_h2) && init_h2_sensor_->has_state()) {
             init_h2 = init_h2_sensor_->state;
         }
