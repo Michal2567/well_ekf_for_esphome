@@ -108,6 +108,11 @@ void WellEKF::update() {
 
     this->publish_state(x[1]);
     if (permeability_sensor_ != nullptr) permeability_sensor_->publish_state(x[2]);
+    if (filtered_h1_sensor_ != nullptr) filtered_h1_sensor_->publish_state(x[0]);
+    if (innovation_sensor_ != nullptr) innovation_sensor_->publish_state(y);
+    if (p_h1_sensor_ != nullptr) p_h1_sensor_->publish_state(P[0][0]);
+    if (p_h2_sensor_ != nullptr) p_h2_sensor_->publish_state(P[1][1]);
+    if (p_k_sensor_ != nullptr) p_k_sensor_->publish_state(P[2][2]);
 }
 
 } // namespace well_ekf

@@ -21,6 +21,11 @@ private:
     esphome::sensor::Sensor *init_h2_sensor_{nullptr};
     esphome::sensor::Sensor *init_k_sensor_{nullptr};
     esphome::sensor::Sensor *permeability_sensor_{nullptr};
+    sensor::Sensor *filtered_h1_sensor_{nullptr};
+    sensor::Sensor *innovation_sensor_{nullptr};
+    sensor::Sensor *p_h1_sensor_{nullptr};
+    sensor::Sensor *p_h2_sensor_{nullptr};
+    sensor::Sensor *p_k_sensor_{nullptr};
     
     float init_h2 = NAN;
     float init_k = NAN;
@@ -32,6 +37,11 @@ public:
     void set_init_h2_sensor(esphome::sensor::Sensor *sensor) { init_h2_sensor_ = sensor; }
     void set_init_k_sensor(esphome::sensor::Sensor *sensor) { init_k_sensor_ = sensor; }
     void set_permeability_sensor(esphome::sensor::Sensor *sensor) { permeability_sensor_ = sensor; }
+    void set_filtered_h1_sensor(sensor::Sensor *sensor) { filtered_h1_sensor_ = sensor; }
+    void set_innovation_sensor(sensor::Sensor *sensor) { innovation_sensor_ = sensor; }
+    void set_p_h1_sensor(sensor::Sensor *sensor) { p_h1_sensor_ = sensor; }
+    void set_p_h2_sensor(sensor::Sensor *sensor) { p_h2_sensor_ = sensor; }
+    void set_p_k_sensor(sensor::Sensor *sensor) { p_k_sensor_ = sensor; }
 
     void setup() override;
     void update() override;
