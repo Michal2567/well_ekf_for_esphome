@@ -40,9 +40,9 @@ void WellEKF::update() {
         x[2] = init_k;
         
         memset(P, 0, sizeof(P));
-        P[0][0] = 1e-3f;
-        P[1][1] = 1e-3f;
-        P[2][2] = 1e-3f;
+        P[0][0] = 1e-10f;
+        P[1][1] = 1e-5f;
+        P[2][2] = 1e-5f;
         
         ekf_initialized = true;
         return;
