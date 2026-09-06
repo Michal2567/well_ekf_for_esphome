@@ -11,11 +11,11 @@ void WellEKF::setup() {
     boot_time = esphome::millis();
     
     memset(Q, 0, sizeof(Q));
-    Q[0][0] = 1e-6f;
-    Q[1][1] = 1e-9f;
+    Q[0][0] = 1e-12f;
+    Q[1][1] = 1e-12f;
     Q[2][2] = 1e-12f;
     
-    R = 0.0001f;
+    R = 0.001f;
 
     // Opraveno: přidáno esphome::
     pref_ = esphome::global_preferences->make_preference<EKFSaveState>(this->get_object_id_hash());
