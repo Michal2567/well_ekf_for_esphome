@@ -17,7 +17,8 @@ void WellEKF::setup() {
     
     R = 0.0001f;
 
-    pref_ = global_preferences->make_preference<EKFSaveState>(this->get_object_id_hash());
+    // Opraveno: přidáno esphome::
+    pref_ = esphome::global_preferences->make_preference<EKFSaveState>(this->get_object_id_hash());
     EKFSaveState state;
     
     if (pref_.load(&state)) {
@@ -48,13 +49,12 @@ void WellEKF::update() {
     float measured_h1 = level_sensor_->state;
     float current_pump_flow = pump_flow_sensor_->state; 
     
-    // Inicializace "na zelené louce" (pouze pokud se nenačetlo z Flash)
     if (!ekf_initialized) {
-        if (esphome::millis() - boot_time < 15000) return; // Prodleva pro stabilizaci senzoru po startu
+        if (esphome::millis() - boot_time < 15000) return;
         
         x[0] = measured_h1;
-        x[1] = measured_h1; // Předpoklad ustáleného stavu
-        x[2] = 0.0001f;     // Výchozí odhad propustnosti
+        x[1] = measured_h1; 
+        x[2] = 0.0001f;     
         
         memset(P, 0, sizeof(P));
         P[0][0] = 0.01f;
