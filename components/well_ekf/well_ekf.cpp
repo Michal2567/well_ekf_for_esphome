@@ -1,18 +1,45 @@
 #include "well_ekf.hpp"
+#include "esphome/core/log.h"
 #include <cstring>
 #include <cmath>
 
 namespace well_ekf {
 
+static const char *const TAG = "well_ekf";
+
 void WellEKF::setup() {
     boot_time = esphome::millis();
     
     memset(Q, 0, sizeof(Q));
-    Q[0][0] = 1e-8f;
-    Q[1][1] = 1e-14f;
-    Q[2][2] = 1e-14f;
+    Q[0][0] = 1e-6f;
+    Q[1][1] = 1e-9f;
+    Q[2][2] = 1e-12f;
     
     R = 0.0001f;
+
+    pref_ = global_preferences->make_preference<EKFSaveState>(this->get_object_id_hash());
+    EKFSaveState state;
+    
+    if (pref_.load(&state)) {
+        for (int i = 0; i < 3; i++) x[i] = state.x[i];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) P[i][j] = state.P[i][j];
+        }
+        ekf_initialized = true;
+        ESP_LOGI(TAG, "EKF matice P a x uspesne obnoveny z Flash pameti.");
+    }
+}
+
+void WellEKF::on_shutdown() {
+    if (ekf_initialized) {
+        EKFSaveState state;
+        for (int i = 0; i < 3; i++) state.x[i] = x[i];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) state.P[i][j] = P[i][j];
+        }
+        pref_.save(&state);
+        ESP_LOGI(TAG, "EKF ulozen do Flash pred restartem.");
+    }
 }
 
 void WellEKF::update() {
@@ -21,30 +48,22 @@ void WellEKF::update() {
     float measured_h1 = level_sensor_->state;
     float current_pump_flow = pump_flow_sensor_->state; 
     
+    // Inicializace "na zelené louce" (pouze pokud se nenačetlo z Flash)
     if (!ekf_initialized) {
-        if (std::isnan(init_h2) && init_h2_sensor_->has_state()) {
-            init_h2 = init_h2_sensor_->state;
-        }
-        if (std::isnan(init_k) && init_k_sensor_->has_state()) {
-            init_k = init_k_sensor_->state;
-        }
-
-        if (std::isnan(init_h2) || std::isnan(init_k)) {
-            if (esphome::millis() - boot_time < 15000) return;
-            if (std::isnan(init_h2)) init_h2 = measured_h1;
-            if (std::isnan(init_k)) init_k = 0.0001f;
-        }
+        if (esphome::millis() - boot_time < 15000) return; // Prodleva pro stabilizaci senzoru po startu
         
         x[0] = measured_h1;
-        x[1] = init_h2;
-        x[2] = init_k;
+        x[1] = measured_h1; // Předpoklad ustáleného stavu
+        x[2] = 0.0001f;     // Výchozí odhad propustnosti
         
         memset(P, 0, sizeof(P));
-        P[0][0] = 1e-10f;
-        P[1][1] = 1e-5f;
-        P[2][2] = 1e-5f;
+        P[0][0] = 0.01f;
+        P[1][1] = 0.1f;
+        P[2][2] = 0.001f;
         
         ekf_initialized = true;
+        last_save_time_ = esphome::millis();
+        ESP_LOGI(TAG, "EKF inicializovan s vychozimi hodnotami.");
         return;
     }
 
@@ -104,6 +123,16 @@ void WellEKF::update() {
             float avg = (P[i][j] + P[j][i]) * 0.5f;
             P[i][j] = P[j][i] = avg;
         }
+    }
+
+    if (esphome::millis() - last_save_time_ > 3600000) {
+        EKFSaveState state;
+        for (int i = 0; i < 3; i++) state.x[i] = x[i];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) state.P[i][j] = P[i][j];
+        }
+        pref_.save(&state);
+        last_save_time_ = esphome::millis();
     }
 
     this->publish_state(x[1]);
