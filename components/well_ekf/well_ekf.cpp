@@ -15,7 +15,7 @@ void WellEKF::setup() {
     Q[1][1] = 1e-12f;
     Q[2][2] = 1e-12f;
     
-    R = 1f;
+    R = 1.0f;
 
     pref_ = esphome::global_preferences->make_preference<EKFSaveState>(this->get_object_id_hash());
     EKFSaveState state;
