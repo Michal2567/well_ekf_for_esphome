@@ -12,7 +12,7 @@ void WellEKF::setup() {
     
     memset(Q, 0, sizeof(Q));
     Q[0][0] = 1e-5f;
-    Q[1][1] = 1e-12f;
+    Q[1][1] = 1e-10f;
     Q[2][2] = 1e-12f;
     
     R = 1.0f;
