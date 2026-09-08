@@ -25,7 +25,7 @@ void WellEKF::setup() {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) P[i][j] = state.P[i][j];
         }
-        //ekf_initialized = true;
+        ekf_initialized = true;
         ESP_LOGI(TAG, "EKF matice P a x uspesne obnoveny z Flash pameti.");
     }
 }
