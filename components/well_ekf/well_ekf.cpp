@@ -11,9 +11,9 @@ void WellEKF::setup() {
     boot_time = esphome::millis();
     
     memset(Q, 0, sizeof(Q));
-    Q[0][0] = 1e-5f;
-    Q[1][1] = 1e-10f;
-    Q[2][2] = 1e-12f;
+    Q[0][0] = 1e-3f;
+    Q[1][1] = 1e-8f;
+    Q[2][2] = 1e-10f;
     
     R = 1.0f;
 
